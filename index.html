@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="筋トレ">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>筋トレ記録</title>
+<style>
+  :root{
+    --bg:#F8F8F8; --card:#FFFFFF; --ink:#111111; --sub:#888888; --line:#E5E5E5;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+    touch-action:manipulation; -webkit-font-smoothing:antialiased;
+    font-size:15px; line-height:1.4;
+  }
+  #app{
+    max-width:430px; margin:0 auto; min-height:100vh; background:var(--bg);
+    position:relative; padding-top:env(safe-area-inset-top);
+  }
+  #main{ padding:0 16px calc(96px + env(safe-area-inset-bottom)); }
+  h1{font-size:18px; font-weight:700; margin:0;}
+
+  .head{
+    position:sticky; top:0; z-index:20; background:var(--bg);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px 12px; margin:0 -16px 14px; border-bottom:1px solid var(--line);
+    min-height:56px;
+  }
+  .head .sub{font-size:12px; color:var(--sub); margin-top:2px;}
+
+  /* Buttons */
+  .btn{
+    display:block; width:100%; background:var(--ink); color:#fff; border:none;
+    padding:16px; font-size:16px; font-weight:700; font-family:inherit;
+    min-height:52px; cursor:pointer; border-radius:0;
+  }
+  .btn:disabled{opacity:.28;}
+  .btn:active{opacity:.85;}
+  .btn.secondary{background:#fff; color:var(--ink); border:1px solid var(--ink);}
+  .btn.ghost{background:#fff; color:var(--sub); border:1px solid var(--line); font-weight:600;}
+  .btn.danger{background:#fff; color:#c0392b; border:1px solid #c0392b;}
+  .btn.sm{padding:11px 14px; font-size:14px; min-height:44px; width:auto;}
+  .topbtn{
+    background:var(--ink); color:#fff; border:none; font-family:inherit;
+    font-weight:700; font-size:14px; padding:10px 18px; min-height:44px; cursor:pointer;
+  }
+  .topbtn:disabled{opacity:.28;}
+  .iconbtn{background:none; border:none; font-size:22px; color:var(--ink); padding:8px; cursor:pointer; line-height:1;}
+  .row-gap{display:flex; gap:8px;}
+  .mt{margin-top:10px;} .mt2{margin-top:18px;} .mb{margin-bottom:10px;}
+
+  /* Card */
+  .card{background:var(--card); border:1px solid var(--line); padding:14px; margin-bottom:10px;}
+  .muted{color:var(--sub); font-size:13px;}
+  .center{text-align:center;}
+
+  /* Tab bar */
+  #tabbar{
+    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:430px; background:#fff; border-top:1px solid var(--line);
+    display:flex; z-index:60; padding-bottom:env(safe-area-inset-bottom);
+  }
+  #tabbar button{
+    flex:1; background:none; border:none; padding:8px 0 6px; color:var(--sub);
+    font-size:11px; display:flex; flex-direction:column; align-items:center; gap:3px;
+    font-family:inherit; cursor:pointer; min-height:52px;
+  }
+  #tabbar button .ic{font-size:21px; line-height:1; opacity:.4;}
+  #tabbar button.active{color:var(--ink); font-weight:700;}
+  #tabbar button.active .ic{opacity:1;}
+
+  /* Calendar */
+  .cal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .cal-title{font-size:17px; font-weight:700;}
+  .cal-nav{background:none; border:none; font-size:24px; padding:6px 16px; color:var(--ink); cursor:pointer; line-height:1;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:3px;}
+  .cal-wd{text-align:center; font-size:11px; color:var(--sub); padding:4px 0; font-weight:600;}
+  .cal-cell{
+    aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;
+    background:#fff; border:1px solid var(--line); font-size:14px; cursor:pointer;
+    position:relative; color:var(--ink);
+  }
+  .cal-cell.empty{background:transparent; border-color:transparent; cursor:default;}
+  .cal-cell.today{font-weight:800;}
+  .cal-cell.sel{border:2px solid var(--ink);}
+  .cal-cell.sun{color:#c0392b;} .cal-cell.sat{color:#2a6fb0;}
+  .cal-dot{width:6px; height:6px; border-radius:50%; background:var(--ink); position:absolute; bottom:5px;}
+  .wd-sun{color:#c0392b;} .wd-sat{color:#2a6fb0;}
+
+  /* Day summary */
+  .summary-ex{padding:10px 0; border-bottom:1px solid var(--line);}
+  .summary-ex:last-child{border-bottom:none;}
+  .summary-ex .nm{font-weight:700; font-size:15px;}
+  .summary-ex .cat{font-size:11px; color:var(--sub); margin-left:6px;}
+  .summary-ex .sets{color:var(--sub); font-size:13px; margin-top:3px;}
+
+  /* Exercise selection */
+  .cat-h{font-size:13px; color:var(--sub); font-weight:700; margin:18px 0 8px; letter-spacing:.03em;}
+  .ex-row{
+    display:flex; align-items:center; gap:13px; background:#fff; border:1px solid var(--line);
+    padding:13px 14px; margin-bottom:6px; min-height:50px; cursor:pointer;
+  }
+  .ex-row .box{
+    width:22px; height:22px; border:1.5px solid var(--sub); flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px;
+  }
+  .ex-row.sel{border-color:var(--ink);}
+  .ex-row.sel .box{background:var(--ink); border-color:var(--ink);}
+  .ex-row .name{font-size:15px;}
+
+  /* Session sets */
+  .prog{font-size:14px; color:var(--sub); font-weight:700;}
+  .set-block{margin-bottom:16px; border-bottom:1px solid var(--line); padding-bottom:14px;}
+  .set-block:last-of-type{border-bottom:none;}
+  .set-label{font-size:13px; color:var(--sub); font-weight:700; margin-bottom:8px;}
+  .field-label{font-size:11px; color:var(--sub); margin:10px 0 5px; font-weight:600;}
+  .valnow{font-weight:800; color:var(--ink);}
+
+  /* Chip bar */
+  .barwrap{
+    overflow-x:auto; -webkit-overflow-scrolling:touch; display:flex; gap:6px;
+    padding:2px 0 6px; scrollbar-width:none; position:relative;
+  }
+  .barwrap::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto; min-width:50px; height:46px; padding:0 12px; background:#fff;
+    color:var(--sub); border:1px solid var(--line); font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none;
+  }
+  .chip.sel{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+  /* Inputs */
+  label.lbl{display:block; font-size:12px; color:var(--sub); font-weight:600; margin:14px 0 6px;}
+  input[type=text],input[type=password],input[type=number]{
+    width:100%; padding:14px; border:1px solid var(--line); font-size:16px;
+    font-family:inherit; background:#fff; border-radius:0; color:var(--ink);
+  }
+  select{
+    width:100%; padding:14px; border:1px solid var(--line); font-size:16px;
+    font-family:inherit; background:#fff; border-radius:0; color:var(--ink); -webkit-appearance:none;
+  }
+  .inline-num{display:flex; gap:10px;}
+  .inline-num > div{flex:1;}
+
+  /* Report */
+  .chart-box{position:relative; height:240px; margin-top:6px;}
+  .hl{font-weight:700;}
+
+  /* Banner */
+  .banner{background:#fff; border:1px solid var(--ink); padding:12px 14px; font-size:13px; margin-bottom:12px; display:flex; gap:10px; align-items:center; justify-content:space-between;}
+  .banner.warn{border-color:#c0392b; color:#c0392b;}
+
+  /* Toast & overlay */
+  #toast{
+    position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(8px);
+    background:#111; color:#fff; padding:13px 20px; font-size:14px; opacity:0;
+    transition:opacity .25s, transform .25s; pointer-events:none; z-index:200;
+    max-width:88%; text-align:center; font-weight:600;
+  }
+  #toast.show{opacity:.96; transform:translateX(-50%) translateY(0);}
+  #overlay{position:fixed; inset:0; background:rgba(248,248,248,.55); display:none; align-items:center; justify-content:center; z-index:150;}
+  #overlay.show{display:flex;}
+  .spinner{width:38px; height:38px; border:3px solid var(--line); border-top-color:var(--ink); border-radius:50%; animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div id="app">
+  <main id="main"></main>
+  <nav id="tabbar">
+    <button data-tab="calendar"><span class="ic">📅</span><span>カレンダー</span></button>
+    <button data-tab="record"><span class="ic">✏️</span><span>記録</span></button>
+    <button data-tab="report"><span class="ic">📊</span><span>レポート</span></button>
+    <button data-tab="settings"><span class="ic">⚙️</span><span>設定</span></button>
+  </nav>
+</div>
+<div id="toast"></div>
+<div id="overlay"><div class="spinner"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+/* ============================================================
+   筋トレ記録 PWA — index.html (single file)
+   ============================================================ */
+
+/* ---------- 種目マスタ ---------- */
+const EXERCISES = {
+  '胸':  ['ベンチプレス','インクラインベンチプレス','スミスマシンインクラインベンチプレス','チェストマシン','チェストフライマシン','ペックデッキフライ','ダンベルフライ','ケーブルクロスオーバー','ディップス'],
+  '脚':  ['スクワット','スミスマシンスクワット','レッグエクステンション','ヒップアブダクションマシン'],
+  '肩':  ['アーノルドプレス','ダンベルショルダープレス','ショルダープレスマシン'],
+  '背中':['ラットプルダウン','ローローマシン','懸垂','チェストサポーテッドTバーロウ'],
+  '腕':  ['ダンベルカール','シーテッドカール','ダンベルフレンチプレス'],
+  '腹':  ['トーソローテーション','トルソーローテーションマシン','アブドミナルクランチマシン','アブドミナルヒップレイズ'],
+};
+const CATEGORIES = ['胸','脚','肩','背中','腕','腹'];
+const SUPPORT_EXERCISES = ['懸垂','ディップス']; // kg → サポート(kg)
+const WD = ['日','月','火','水','木','金','土'];
+
+const KG_OPTIONS = [];
+for (let v = 2.5; v <= 100.0001; v += 2.5) KG_OPTIONS.push(Math.round(v * 10) / 10);
+const REP_OPTIONS = [];
+for (let r = 1; r <= 15; r++) REP_OPTIONS.push(r);
+
+/* ---------- 状態 ---------- */
+const state = {
+  records: {},
+  token: localStorage.getItem('gym_token') || '',
+  repo:  localStorage.getItem('gym_repo')  || 'culapy1995/training',
+  view: 'calendar',
+  calMonth: startOfMonth(new Date()),
+  selectedDate: todayStr(),
+  selection: new Set(),
+  runningSelected: false,
+  session: null,        // { date, items:[...], index, editing }
+  pendingSync: false,   // ローカルに保存済みだが未プッシュ
+  charts: { freq:null, prog:null },
+  progExercise: null,
+};
+
+/* ---------- 日付ユーティリティ ---------- */
+function pad(n){ return String(n).padStart(2,'0'); }
+function dateStr(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function todayStr(){ return dateStr(new Date()); }
+function parseDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y, m-1, d); }
+function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+function fmtJp(s){ const d=parseDate(s); return (d.getMonth()+1)+'月'+d.getDate()+'日（'+WD[d.getDay()]+'）'; }
+function fmtKg(n){ return String(n); }
+
+/* ---------- base64 (UTF-8 安全) ---------- */
+function utf8ToBase64(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = ''; const chunk = 0x8000;
+  for (let i=0; i<bytes.length; i+=chunk){
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
+  }
+  return btoa(bin);
+}
+function base64ToUtf8(b64){
+  const bin = atob(b64.replace(/\s/g,''));
+  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+/* ---------- localStorage キャッシュ ---------- */
+function cacheRecords(){ try{ localStorage.setItem('gym_records', JSON.stringify(state.records)); }catch(e){} }
+function loadCache(){ try{ state.records = JSON.parse(localStorage.getItem('gym_records')||'{}') || {}; }catch(e){ state.records = {}; } }
+
+/* ---------- GitHub API ---------- */
+function ghUrl(){ return 'https://api.github.com/repos/'+state.repo+'/contents/data/records.json'; }
+function ghHeaders(){
+  return {
+    'Authorization': 'Bearer ' + state.token,
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+}
+
+async function ghLoad(){
+  if(!state.token || !state.repo) throw new Error('未設定');
+  const res = await fetch(ghUrl(), { headers: ghHeaders(), cache:'no-store' });
+  if(res.status === 404){
+    // ファイルが無い → 空で自動作成
+    state.records = {};
+    await ghSave('init data/records.json');
+    return;
+  }
+  if(res.status === 401) throw new Error('トークンが無効です（401）');
+  if(!res.ok) throw new Error('読み込み失敗 ('+res.status+')');
+  const data = await res.json();
+  const json = base64ToUtf8(data.content || '');
+  let parsed = {};
+  try{ parsed = JSON.parse(json || '{}'); }catch(e){ parsed = {}; }
+  state.records = parsed.records || {};
+  state.pendingSync = false;
+  cacheRecords();
+}
+
+// 2段階処理：最新SHAを取得 → 上書きPUT
+async function ghSave(message){
+  if(!state.token || !state.repo) throw new Error('トークンとリポジトリを設定してください');
+  let sha = null;
+  const getRes = await fetch(ghUrl(), { headers: ghHeaders(), cache:'no-store' });
+  if(getRes.ok){ const d = await getRes.json(); sha = d.sha; }
+  else if(getRes.status === 401){ throw new Error('トークンが無効です（401）'); }
+  else if(getRes.status !== 404){ throw new Error('SHA取得失敗 ('+getRes.status+')'); }
+
+  const body = {
+    message: message || ('update ' + new Date().toISOString()),
+    content: utf8ToBase64(JSON.stringify({ records: state.records }, null, 2))
+  };
+  if(sha) body.sha = sha;
+
+  const res = await fetch(ghUrl(), {
+    method:'PUT', headers:{ ...ghHeaders(), 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok){
+    let msg = res.status;
+    try{ const t = await res.json(); if(t.message) msg += ' ' + t.message; }catch(e){}
+    throw new Error('保存失敗 ('+msg+')');
+  }
+  state.pendingSync = false;
+  cacheRecords();
+}
+
+/* ---------- UI ヘルパ ---------- */
+const $ = (sel, root=document) => root.querySelector(sel);
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+let toastTimer = null;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+function setLoading(on){ $('#overlay').classList.toggle('show', !!on); }
+
+/* ---------- ナビゲーション ---------- */
+function go(view){ state.view = view; render(); window.scrollTo(0,0); }
+
+function setupTabs(){
+  document.querySelectorAll('#tabbar button').forEach(b => {
+    b.addEventListener('click', () => {
+      const tab = b.dataset.tab;
+      if(tab === 'record'){ state.selectedDate = todayStr(); }
+      go(tab);
+    });
+  });
+}
+
+function render(){
+  // タブのアクティブ表示
+  document.querySelectorAll('#tabbar button').forEach(b => {
+    const t = b.dataset.tab;
+    const active = (t === state.view) || (t === 'record' && state.view === 'session');
+    b.classList.toggle('active', active);
+  });
+  // 既存チャート破棄
+  ['freq','prog'].forEach(k => { if(state.charts[k]){ state.charts[k].destroy(); state.charts[k] = null; } });
+
+  const m = $('#main');
+  if(state.view === 'calendar') renderCalendar(m);
+  else if(state.view === 'record') renderRecord(m);
+  else if(state.view === 'session') renderSession(m);
+  else if(state.view === 'report') renderReport(m);
+  else if(state.view === 'settings') renderSettings(m);
+}
+
+/* ============================================================
+   1. カレンダー
+   ============================================================ */
+function renderCalendar(m){
+  const month = state.calMonth;
+  const y = month.getFullYear(), mo = month.getMonth();
+  const first = new Date(y, mo, 1);
+  const startWd = first.getDay();
+  const daysInMonth = new Date(y, mo+1, 0).getDate();
+  const tStr = todayStr();
+
+  let cells = '';
+  for(let i=0;i<startWd;i++) cells += '<div class="cal-cell empty"></div>';
+  for(let d=1; d<=daysInMonth; d++){
+    const ds = y+'-'+pad(mo+1)+'-'+pad(d);
+    const dow = new Date(y, mo, d).getDay();
+    const has = !!(state.records[ds] && ((state.records[ds].workouts||[]).length || state.records[ds].running));
+    const cls = ['cal-cell'];
+    if(ds === tStr) cls.push('today');
+    if(ds === state.selectedDate) cls.push('sel');
+    if(dow === 0) cls.push('sun'); if(dow === 6) cls.push('sat');
+    cells += '<div class="'+cls.join(' ')+'" data-date="'+ds+'"><span>'+d+'</span>'+(has?'<span class="cal-dot"></span>':'')+'</div>';
+  }
+
+  const wdRow = WD.map((w,i)=> '<div class="cal-wd '+(i===0?'wd-sun':i===6?'wd-sat':'')+'">'+w+'</div>').join('');
+
+  let banner = '';
+  if(!state.token){
+    banner = '<div class="banner">⚙️ 設定でGitHubトークンを登録してください<button class="btn sm" data-act="goset">設定へ</button></div>';
+  } else if(state.pendingSync){
+    banner = '<div class="banner warn">未同期の記録があります<button class="btn sm" data-act="sync">再同期</button></div>';
+  }
+
+  m.innerHTML =
+    '<div class="head"><h1>カレンダー</h1></div>' +
+    banner +
+    '<div class="cal-head">' +
+      '<button class="cal-nav" data-act="prev">‹</button>' +
+      '<div class="cal-title">'+y+'年'+(mo+1)+'月</div>' +
+      '<button class="cal-nav" data-act="next">›</button>' +
+    '</div>' +
+    '<div id="cal-grid">' +
+      '<div class="cal-grid">'+wdRow+'</div>' +
+      '<div class="cal-grid" style="margin-top:3px">'+cells+'</div>' +
+    '</div>' +
+    '<div id="day-panel" style="margin-top:16px"></div>';
+
+  // 月移動
+  $('[data-act=prev]', m).onclick = () => { state.calMonth = new Date(y, mo-1, 1); render(); };
+  $('[data-act=next]', m).onclick = () => { state.calMonth = new Date(y, mo+1, 1); render(); };
+  const goset = $('[data-act=goset]', m); if(goset) goset.onclick = () => go('settings');
+  const syncb = $('[data-act=sync]', m); if(syncb) syncb.onclick = manualSync;
+
+  // 日付タップ
+  m.querySelectorAll('.cal-cell[data-date]').forEach(c => {
+    c.onclick = () => { state.selectedDate = c.dataset.date; render(); renderDayPanel(); };
+  });
+
+  // スワイプで月移動
+  attachSwipe($('#cal-grid', m),
+    () => { state.calMonth = new Date(y, mo+1, 1); render(); },
+    () => { state.calMonth = new Date(y, mo-1, 1); render(); });
+
+  renderDayPanel();
+}
+
+function renderDayPanel(){
+  const panel = $('#day-panel'); if(!panel) return;
+  const ds = state.selectedDate;
+  const day = state.records[ds];
+  const hasData = day && ((day.workouts||[]).length || day.running);
+
+  let html = '<div class="muted" style="margin-bottom:8px">'+fmtJp(ds)+'</div>';
+
+  if(hasData){
+    html += '<div class="card">';
+    (day.workouts||[]).forEach(w => {
+      const sets = (w.sets||[]).map(s => {
+        const isSup = SUPPORT_EXERCISES.includes(w.exercise);
+        const kg = (isSup && (!s.kg)) ? '自重' : fmtKg(s.kg)+'kg';
+        return kg+'×'+s.reps;
+      }).join(' / ');
+      html += '<div class="summary-ex"><div><span class="nm">'+esc(w.exercise)+'</span><span class="cat">'+esc(w.category||'')+'</span></div><div class="sets">'+sets+'</div></div>';
+    });
+    if(day.running){
+      html += '<div class="summary-ex"><div><span class="nm">🏃 ランニング</span></div><div class="sets">傾斜 '+esc(day.running.incline)+' ／ '+esc(day.running.duration)+'分</div></div>';
+    }
+    html += '</div>';
+    html += '<button class="btn secondary" data-act="edit">この日の記録を編集</button>';
+    html += '<div class="mt"><button class="btn" data-act="rec">この日に追加で記録する</button></div>';
+  } else {
+    html += '<button class="btn" data-act="rec">この日に記録する</button>';
+  }
+
+  panel.innerHTML = html;
+  const rec = $('[data-act=rec]', panel); if(rec) rec.onclick = () => { state.selection.clear(); state.runningSelected=false; go('record'); };
+  const edit = $('[data-act=edit]', panel); if(edit) edit.onclick = () => editSession(ds);
+}
+
+/* ============================================================
+   2. 記録（種目選択）
+   ============================================================ */
+function renderRecord(m){
+  const canStart = state.selection.size > 0 || state.runningSelected;
+
+  let groups = '';
+  CATEGORIES.forEach(cat => {
+    groups += '<div class="cat-h">'+cat+'</div>';
+    EXERCISES[cat].forEach(ex => {
+      const sel = state.selection.has(ex);
+      groups += '<div class="ex-row'+(sel?' sel':'')+'" data-ex="'+esc(ex)+'">' +
+        '<div class="box">'+(sel?'✓':'')+'</div><div class="name">'+esc(ex)+'</div></div>';
+    });
+  });
+  // ランニング（独立項目）
+  groups += '<div class="cat-h">有酸素</div>';
+  groups += '<div class="ex-row'+(state.runningSelected?' sel':'')+'" data-run="1">' +
+    '<div class="box">'+(state.runningSelected?'✓':'')+'</div><div class="name">🏃 ランニング</div></div>';
+
+  m.innerHTML =
+    '<div class="head">' +
+      '<div><h1>種目を選択</h1><div class="sub">'+fmtJp(state.selectedDate)+'</div></div>' +
+      '<button class="topbtn" id="startBtn"'+(canStart?'':' disabled')+'>開始</button>' +
+    '</div>' +
+    groups;
+
+  m.querySelectorAll('.ex-row[data-ex]').forEach(r => {
+    r.onclick = () => {
+      const ex = r.dataset.ex;
+      if(state.selection.has(ex)) state.selection.delete(ex); else state.selection.add(ex);
+      render();
+    };
+  });
+  $('[data-run]', m).onclick = () => { state.runningSelected = !state.runningSelected; render(); };
+  $('#startBtn', m).onclick = () => {
+    if(!(state.selection.size > 0 || state.runningSelected)) return;
+    startSession(state.selectedDate, [...state.selection], state.runningSelected, state.records[state.selectedDate]);
+  };
+}
+
+/* ---------- セッション構築 ---------- */
+function lastRecordOf(exercise, excludeDate){
+  const dates = Object.keys(state.records).filter(d => d !== excludeDate).sort().reverse();
+  for(const d of dates){
+    const w = (state.records[d].workouts||[]).find(w => w.exercise === exercise);
+    if(w) return w;
+  }
+  return null;
+}
+
+function buildSets(exercise, support, date, existingWorkout){
+  let base;
+  if(existingWorkout && existingWorkout.sets && existingWorkout.sets.length){
+    base = existingWorkout.sets;
+  } else {
+    const prev = lastRecordOf(exercise, date);
+    base = prev ? prev.sets : null;
+  }
+  const def = { kg: support ? 0 : 20, reps: 10 };
+  const sets = [];
+  for(let i=0;i<3;i++){
+    const src = base ? (base[i] || base[base.length-1]) : def;
+    sets.push({ kg: (src.kg===undefined? def.kg : src.kg), reps: (src.reps===undefined? def.reps : src.reps) });
+  }
+  return sets;
+}
+
+function startSession(date, exerciseNames, includeRunning, existingDay){
+  const items = [];
+  CATEGORIES.forEach(cat => EXERCISES[cat].forEach(ex => {
+    if(exerciseNames.includes(ex)){
+      const support = SUPPORT_EXERCISES.includes(ex);
+      const ex0 = existingDay && existingDay.workouts ? existingDay.workouts.find(w => w.exercise === ex) : null;
+      items.push({ type:'exercise', exercise:ex, category:cat, support, sets: buildSets(ex, support, date, ex0) });
+    }
+  }));
+  if(includeRunning || (existingDay && existingDay.running)){
+    const r = (existingDay && existingDay.running) ? existingDay.running : { incline:'', duration:'' };
+    items.push({ type:'running', incline: r.incline, duration: r.duration });
+  }
+  if(items.length === 0){ toast('種目を選択してください'); return; }
+  state.session = { date, items, index:0, editing: !!existingDay };
+  go('session');
+}
+
+function editSession(date){
+  const day = state.records[date] || {};
+  const names = (day.workouts||[]).map(w => w.exercise);
+  startSession(date, names, !!day.running, day);
+}
+
+/* ============================================================
+   3. トレーニング実施
+   ============================================================ */
+function renderSession(m){
+  const s = state.session;
+  if(!s){ go('calendar'); return; }
+  const item = s.items[s.index];
+  const total = s.items.length;
+  const isLast = s.index === total - 1;
+
+  let body = '';
+  if(item.type === 'running'){
+    body =
+      '<div class="card">' +
+        '<label class="lbl">傾斜</label>' +
+        '<input type="number" id="r-incline" inputmode="decimal" step="0.5" placeholder="例: 3.5" value="'+(item.incline??'')+'">' +
+        '<label class="lbl">時間（分）</label>' +
+        '<input type="number" id="r-duration" inputmode="numeric" step="1" placeholder="例: 20" value="'+(item.duration??'')+'">' +
+      '</div>';
+  } else {
+    const kgLabel = item.support ? 'サポート(kg)' : 'kg';
+    for(let si=0; si<3; si++){
+      const set = item.sets[si];
+      body +=
+        '<div class="set-block">' +
+          '<div class="set-label">セット '+(si+1)+'</div>' +
+          '<div class="field-label">'+kgLabel+'：<span class="valnow" id="kgval-'+si+'">'+kgText(set.kg, item.support)+'</span></div>' +
+          chipBar('kg', si, item.support) +
+          '<div class="field-label">回数：<span class="valnow" id="repval-'+si+'">'+set.reps+' 回</span></div>' +
+          chipBar('reps', si, item.support) +
+        '</div>';
+    }
+  }
+
+  const title = item.type === 'running' ? '🏃 ランニング' : esc(item.exercise);
+  const catLine = item.type === 'running' ? '有酸素' : esc(item.category);
+
+  let nav = '';
+  if(s.index > 0) nav += '<button class="btn ghost" data-act="prev" style="flex:1">前へ</button>';
+  if(!isLast) nav += '<button class="btn" data-act="next" style="flex:2">次の種目へ ›</button>';
+  else nav += '<button class="btn" data-act="save" style="flex:2">保存する</button>';
+
+  m.innerHTML =
+    '<div class="head">' +
+      '<button class="iconbtn" data-act="cancel">✕</button>' +
+      '<div style="text-align:center;flex:1"><h1>'+title+'</h1><div class="sub">'+catLine+'</div></div>' +
+      '<div class="prog">'+(s.index+1)+'/'+total+'</div>' +
+    '</div>' +
+    body +
+    '<div class="row-gap mt2">'+nav+'</div>' +
+    (isLast ? '' : '<div class="mt"><button class="btn secondary" data-act="save">ここまでを保存</button></div>');
+
+  // チップ操作（委譲）
+  m.querySelectorAll('.barwrap').forEach(bar => {
+    bar.addEventListener('click', e => {
+      const chip = e.target.closest('.chip'); if(!chip) return;
+      const kind = bar.dataset.kind, si = +bar.dataset.set, val = parseFloat(chip.dataset.val);
+      if(kind === 'kg') item.sets[si].kg = val; else item.sets[si].reps = val;
+      bar.querySelectorAll('.chip').forEach(c => c.classList.remove('sel'));
+      chip.classList.add('sel');
+      const lab = kind === 'kg' ? $('#kgval-'+si, m) : $('#repval-'+si, m);
+      if(lab) lab.textContent = kind === 'kg' ? kgText(val, item.support) : (val + ' 回');
+    });
+  });
+  // 選択中チップを中央へスクロール
+  m.querySelectorAll('.barwrap').forEach(bar => {
+    const sel = bar.querySelector('.chip.sel');
+    if(sel) bar.scrollLeft = sel.offsetLeft - bar.clientWidth/2 + sel.clientWidth/2;
+  });
+
+  // ランニング入力
+  if(item.type === 'running'){
+    $('#r-incline', m).addEventListener('input', e => item.incline = e.target.value);
+    $('#r-duration', m).addEventListener('input', e => item.duration = e.target.value);
+  }
+
+  // ナビ
+  const prevB = $('[data-act=prev]', m); if(prevB) prevB.onclick = () => { s.index--; render(); window.scrollTo(0,0); };
+  const nextB = $('[data-act=next]', m); if(nextB) nextB.onclick = () => { s.index++; render(); window.scrollTo(0,0); };
+  m.querySelectorAll('[data-act=save]').forEach(b => b.onclick = saveSession);
+  $('[data-act=cancel]', m).onclick = () => {
+    if(confirm('記録を中断しますか？（保存されていない内容は失われます）')){ state.session=null; go('calendar'); }
+  };
+}
+
+function kgText(kg, support){
+  if(support && (!kg || kg === 0)) return '自重';
+  return fmtKg(kg) + ' kg';
+}
+
+function chipBar(kind, setIdx, support){
+  const set = state.session.items[state.session.index].sets[setIdx];
+  const cur = kind === 'kg' ? set.kg : set.reps;
+  let opts = kind === 'kg' ? KG_OPTIONS.slice() : REP_OPTIONS.slice();
+  if(kind === 'kg' && support) opts = [0].concat(opts); // サポート種目は 0(自重) を先頭に
+  const chips = opts.map(o => {
+    const sel = Math.abs(o - cur) < 0.001 ? ' sel' : '';
+    const label = (kind === 'kg') ? (o === 0 ? '自重' : fmtKg(o)) : o;
+    return '<div class="chip'+sel+'" data-val="'+o+'">'+label+'</div>';
+  }).join('');
+  return '<div class="barwrap" data-kind="'+kind+'" data-set="'+setIdx+'">'+chips+'</div>';
+}
+
+async function saveSession(){
+  const s = state.session; if(!s) return;
+  const date = s.date;
+  const day = state.records[date] ? JSON.parse(JSON.stringify(state.records[date])) : { workouts:[] };
+  if(!day.workouts) day.workouts = [];
+
+  s.items.forEach(it => {
+    if(it.type === 'exercise'){
+      const w = {
+        exercise: it.exercise,
+        category: it.category,
+        sets: it.sets.map(st => ({ kg: it.support ? (st.kg || 0) : st.kg, reps: st.reps }))
+      };
+      const idx = day.workouts.findIndex(x => x.exercise === it.exercise);
+      if(idx >= 0) day.workouts[idx] = w; else day.workouts.push(w);
+    } else {
+      const inc = parseFloat(it.incline);
+      const dur = parseFloat(it.duration);
+      if(!isNaN(inc) || !isNaN(dur)){
+        day.running = { incline: isNaN(inc) ? 0 : inc, duration: isNaN(dur) ? 0 : dur };
+      }
+    }
+  });
+
+  state.records[date] = day;
+  cacheRecords();
+
+  setLoading(true);
+  try{
+    await ghSave('workout ' + date);
+    toast('保存しました');
+  }catch(e){
+    state.pendingSync = true;
+    toast('オフライン保存（後で再同期）: ' + e.message);
+  }finally{
+    setLoading(false);
+  }
+  state.session = null;
+  state.selection.clear();
+  state.runningSelected = false;
+  state.calMonth = startOfMonth(parseDate(date));
+  go('calendar');
+}
+
+/* ============================================================
+   5. レポート
+   ============================================================ */
+function renderReport(m){
+  m.innerHTML =
+    '<div class="head"><h1>レポート</h1></div>' +
+    '<div class="card">' +
+      '<div style="font-weight:700;margin-bottom:2px">部位別トレーニング頻度</div>' +
+      '<div class="muted mb">直近30日間</div>' +
+      '<div id="freq-wrap"></div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<div style="font-weight:700;margin-bottom:2px">種目別の重量推移</div>' +
+      '<div class="muted mb">直近3ヶ月・最大重量</div>' +
+      '<div id="prog-select"></div>' +
+      '<div id="prog-wrap"></div>' +
+    '</div>';
+
+  renderFreqChart();
+  renderProgSection();
+}
+
+function freqData(){
+  const inRange = new Set();
+  for(let i=0;i<30;i++){ const d=new Date(); d.setDate(d.getDate()-i); inRange.add(dateStr(d)); }
+  const counts = {}; CATEGORIES.forEach(c => counts[c]=0);
+  Object.keys(state.records).forEach(d => {
+    if(!inRange.has(d)) return;
+    const cats = new Set((state.records[d].workouts||[]).map(w => w.category));
+    cats.forEach(c => { if(counts[c] !== undefined) counts[c]++; });
+  });
+  return counts;
+}
+
+function renderFreqChart(){
+  const wrap = $('#freq-wrap'); if(!wrap) return;
+  const counts = freqData();
+  const vals = CATEGORIES.map(c => counts[c]);
+  const total = vals.reduce((a,b)=>a+b,0);
+  if(total === 0){ wrap.innerHTML = '<div class="muted center" style="padding:20px 0">まだ記録がありません</div>'; return; }
+  if(typeof Chart === 'undefined'){ wrap.innerHTML = '<div class="muted center" style="padding:20px 0">グラフを読み込めません（オフライン）</div>'; return; }
+
+  const max = Math.max(...vals);
+  const colors = vals.map(v => (v === max && v > 0) ? '#111111' : '#D0D0D0');
+  wrap.innerHTML = '<div class="chart-box"><canvas id="freqCanvas"></canvas></div>';
+  state.charts.freq = new Chart($('#freqCanvas'), {
+    type:'bar',
+    data:{ labels: CATEGORIES, datasets:[{ data: vals, backgroundColor: colors, borderWidth:0, barThickness:22 }] },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false }, tooltip:{ enabled:true } },
+      scales:{
+        x:{ beginAtZero:true, ticks:{ precision:0, color:'#888' }, grid:{ color:'#eee' } },
+        y:{ ticks:{ color:'#111', font:{ weight:'700' } }, grid:{ display:false } }
+      }
+    }
+  });
+}
+
+function exercisesWithData(){
+  const set = new Set();
+  Object.values(state.records).forEach(day => (day.workouts||[]).forEach(w => set.add(w.exercise)));
+  const out = [];
+  CATEGORIES.forEach(c => EXERCISES[c].forEach(ex => { if(set.has(ex)) out.push(ex); }));
+  return out;
+}
+
+function progData(ex){
+  const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth()-3);
+  const cutoffStr = dateStr(cutoff);
+  const points = [];
+  Object.keys(state.records).sort().forEach(d => {
+    if(d < cutoffStr) return;
+    const w = (state.records[d].workouts||[]).find(w => w.exercise === ex);
+    if(w && w.sets && w.sets.length){
+      const maxKg = Math.max(...w.sets.map(s => s.kg || 0));
+      points.push({ x:d, y:maxKg });
+    }
+  });
+  return points;
+}
+
+function renderProgSection(){
+  const selWrap = $('#prog-select'); const wrap = $('#prog-wrap');
+  if(!selWrap || !wrap) return;
+  const list = exercisesWithData();
+  if(list.length === 0){
+    selWrap.innerHTML = '';
+    wrap.innerHTML = '<div class="muted center" style="padding:20px 0">まだ記録がありません</div>';
+    return;
+  }
+  if(!state.progExercise || !list.includes(state.progExercise)) state.progExercise = list[0];
+
+  selWrap.innerHTML = '<select id="progSel">' +
+    list.map(ex => '<option value="'+esc(ex)+'"'+(ex===state.progExercise?' selected':'')+'>'+esc(ex)+'</option>').join('') +
+    '</select>';
+  $('#progSel').onchange = (e) => { state.progExercise = e.target.value; renderProgChart(); };
+  renderProgChart();
+}
+
+function renderProgChart(){
+  const wrap = $('#prog-wrap'); if(!wrap) return;
+  if(state.charts.prog){ state.charts.prog.destroy(); state.charts.prog = null; }
+  const points = progData(state.progExercise);
+  if(points.length === 0){ wrap.innerHTML = '<div class="muted center" style="padding:20px 0">この種目の記録がありません</div>'; return; }
+  if(typeof Chart === 'undefined'){ wrap.innerHTML = '<div class="muted center" style="padding:20px 0">グラフを読み込めません（オフライン）</div>'; return; }
+
+  wrap.innerHTML = '<div class="chart-box"><canvas id="progCanvas"></canvas></div>';
+  state.charts.prog = new Chart($('#progCanvas'), {
+    type:'line',
+    data:{
+      labels: points.map(p => p.x.slice(5)),
+      datasets:[{ data: points.map(p => p.y), borderColor:'#111111', backgroundColor:'#111111',
+        tension:.2, pointRadius:3, pointBackgroundColor:'#111', borderWidth:2, fill:false }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label: c => c.parsed.y + ' kg' } } },
+      scales:{
+        y:{ beginAtZero:false, ticks:{ precision:0, color:'#888' }, grid:{ color:'#eee' } },
+        x:{ ticks:{ color:'#888', maxRotation:0, autoSkip:true, maxTicksLimit:6 }, grid:{ display:false } }
+      }
+    }
+  });
+}
+
+/* ============================================================
+   6. 設定
+   ============================================================ */
+function renderSettings(m){
+  m.innerHTML =
+    '<div class="head"><h1>設定</h1></div>' +
+
+    '<label class="lbl">GitHub アクセストークン</label>' +
+    '<input type="password" id="in-token" placeholder="ghp_xxx / github_pat_xxx" value="'+esc(state.token)+'" autocomplete="off">' +
+    '<label class="lbl">リポジトリ名（user/repo）</label>' +
+    '<input type="text" id="in-repo" placeholder="culapy1995/training" value="'+esc(state.repo)+'" autocomplete="off">' +
+    '<div class="mt"><button class="btn" data-act="savecfg">保存して接続</button></div>' +
+    '<div class="mt"><button class="btn ghost" data-act="reload">GitHubから再読み込み</button></div>' +
+    (state.pendingSync ? '<div class="mt"><button class="btn secondary" data-act="sync">未同期データを再同期</button></div>' : '') +
+
+    '<div class="cat-h">バックアップ</div>' +
+    '<button class="btn secondary" data-act="export">JSONエクスポート</button>' +
+    '<div class="mt"><button class="btn secondary" data-act="import">JSONインポート</button></div>' +
+    '<input type="file" id="file-import" accept="application/json,.json" style="display:none">' +
+
+    '<div class="cat-h">データ</div>' +
+    '<button class="btn danger" data-act="reset">全データをリセット</button>' +
+
+    '<div class="card mt2"><div class="muted">記録日数: '+Object.keys(state.records).length+' 日</div>' +
+      '<div class="muted">接続: '+(state.token ? '設定済み' : '未設定')+'</div>' +
+      '<div class="muted" style="margin-top:6px;font-size:11px">※ トークンは端末内(localStorage)にのみ保存され、Contents の読み書き権限が必要です。</div>' +
+    '</div>';
+
+  $('[data-act=savecfg]', m).onclick = () => {
+    state.token = $('#in-token', m).value.trim();
+    state.repo  = $('#in-repo', m).value.trim();
+    localStorage.setItem('gym_token', state.token);
+    localStorage.setItem('gym_repo', state.repo);
+    if(!state.token || !state.repo){ toast('トークンとリポジトリを入力してください'); return; }
+    reloadFromGitHub();
+  };
+  $('[data-act=reload]', m).onclick = reloadFromGitHub;
+  const syncb = $('[data-act=sync]', m); if(syncb) syncb.onclick = manualSync;
+
+  $('[data-act=export]', m).onclick = exportJSON;
+  $('[data-act=import]', m).onclick = () => $('#file-import', m).click();
+  $('#file-import', m).onchange = importJSON;
+
+  $('[data-act=reset]', m).onclick = async () => {
+    if(!confirm('本当に全データをリセットしますか？この操作は元に戻せません。')) return;
+    state.records = {};
+    cacheRecords();
+    setLoading(true);
+    try{ await ghSave('reset records'); toast('リセットしました'); }
+    catch(e){ state.pendingSync = true; toast('ローカルのみリセット: ' + e.message); }
+    finally{ setLoading(false); render(); }
+  };
+}
+
+async function reloadFromGitHub(){
+  if(!state.token || !state.repo){ toast('未設定です'); return; }
+  setLoading(true);
+  try{ await ghLoad(); toast('読み込みました'); }
+  catch(e){ toast('読み込み失敗: ' + e.message); }
+  finally{ setLoading(false); render(); }
+}
+
+async function manualSync(){
+  setLoading(true);
+  try{ await ghSave('manual sync'); toast('再同期しました'); }
+  catch(e){ toast('同期失敗: ' + e.message); }
+  finally{ setLoading(false); render(); }
+}
+
+function exportJSON(){
+  const blob = new Blob([JSON.stringify({ records: state.records }, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'records-' + todayStr() + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      const recs = parsed.records || parsed;
+      if(typeof recs !== 'object' || recs === null) throw new Error('形式が不正です');
+      if(!confirm('現在のデータを置き換えてインポートしますか？')) return;
+      state.records = recs;
+      cacheRecords();
+      setLoading(true);
+      try{ await ghSave('import records'); toast('インポートしました'); }
+      catch(err){ state.pendingSync = true; toast('ローカルにインポート: ' + err.message); }
+      finally{ setLoading(false); render(); }
+    }catch(err){ toast('インポート失敗: ' + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+/* ============================================================
+   スワイプ
+   ============================================================ */
+function attachSwipe(el, onLeft, onRight){
+  if(!el) return;
+  let x0=null, y0=null;
+  el.addEventListener('touchstart', e => { const t=e.touches[0]; x0=t.clientX; y0=t.clientY; }, { passive:true });
+  el.addEventListener('touchend', e => {
+    if(x0===null) return;
+    const t=e.changedTouches[0];
+    const dx=t.clientX-x0, dy=t.clientY-y0;
+    if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)*1.5){ if(dx<0) onLeft(); else onRight(); }
+    x0=null; y0=null;
+  }, { passive:true });
+}
+
+/* ============================================================
+   起動
+   ============================================================ */
+async function init(){
+  loadCache();
+  setupTabs();
+  render();
+  if(state.token && state.repo){
+    setLoading(true);
+    try{ await ghLoad(); }
+    catch(e){ toast('オフライン表示: ' + e.message); }
+    finally{ setLoading(false); render(); }
+  }
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+    });
+  }
+}
+init();
+</script>
+</body>
+</html>

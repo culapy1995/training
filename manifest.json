@@ -1,0 +1,16 @@
+{
+  "name": "筋トレ記録",
+  "short_name": "筋トレ",
+  "description": "完全個人用の筋トレ記録アプリ",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F8F8F8",
+  "theme_color": "#111111",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
