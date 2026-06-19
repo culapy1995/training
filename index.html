@@ -16,6 +16,7 @@
   :root{
     --bg:#F6F5F2; --card:#FFFFFF; --ink:#1C1C1E; --sub:#8A8A8E; --line:#ECEAE5;
     --soft:#F1EFEA; --radius:16px; --radius-sm:12px;
+    --accent:#3F9D6B; --accent-bg:#DCEFE2; --accent-line:#BFE3CC;
     --shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 22px rgba(0,0,0,.05);
     --shadow-sm:0 1px 3px rgba(0,0,0,.05);
   }
@@ -102,6 +103,9 @@
   .cal-cell.sel{outline:2px solid var(--ink); outline-offset:-2px;}
   .cal-cell.sun{color:#c0392b;} .cal-cell.sat{color:#2a6fb0;}
   .cal-dot{width:6px; height:6px; border-radius:50%; background:var(--ink); position:absolute; bottom:6px;}
+  .cal-cell.has{background:var(--accent-bg);}
+  .cal-cell.has.sel{outline-color:var(--accent);}
+  .cal-check{position:absolute; bottom:3px; font-size:10px; line-height:1; color:var(--accent); font-weight:900;}
   .wd-sun{color:#c0392b;} .wd-sat{color:#2a6fb0;}
 
   .summary-ex{padding:11px 0; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:12px;}
@@ -140,10 +144,12 @@
   .ex-card-title{flex:1;}
   .ex-card-name{font-weight:800; font-size:16px;}
   .ex-card-cat{font-size:11px; color:var(--sub);}
-  .ex-chk{width:26px; height:26px; border-radius:999px; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; color:var(--sub); flex:0 0 auto;}
+  .ex-del{background:none; border:none; color:var(--sub); font-size:15px; width:30px; height:30px; cursor:pointer; flex:0 0 auto; line-height:1;}
+  .ex-chk{width:28px; height:28px; border-radius:999px; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; color:var(--sub); flex:0 0 auto; font-weight:800;}
   .ex-chk::after{content:'⌄'; font-size:16px; line-height:1; margin-top:-3px;}
-  .ex-card.collapsed .ex-chk{background:var(--ink); border-color:var(--ink); color:#fff;}
-  .ex-card.collapsed .ex-chk::after{content:'✓'; font-size:13px; margin-top:0;}
+  .ex-card:not(.collapsed) .ex-chk::after{content:'⌃'; margin-top:3px;}
+  .ex-card.collapsed.done .ex-chk{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .ex-card.collapsed.done .ex-chk::after{content:'✓'; font-size:14px; margin-top:0;}
   .ex-hist{font-size:12px; color:var(--sub); margin-top:8px; line-height:1.5;}
   .ex-card-body{margin-top:6px;}
   .ex-card-sum{display:none; color:var(--sub); font-size:13px; padding-top:8px;}
@@ -154,13 +160,15 @@
   .set-block:first-child{border-top:none;}
   .set-label{font-size:13px; color:var(--ink); font-weight:800;}
   .field-label{font-size:11px; color:var(--sub); margin:9px 0 5px; font-weight:700;}
-  .valnow{font-weight:800; color:var(--ink); font-size:13px;}
+  .valrow{display:flex; align-items:center; gap:8px; margin:9px 0 5px;}
+  .valnow{font-weight:800; color:var(--ink); font-size:16px;}
+  .valtag{font-size:10px; color:var(--sub); background:var(--soft); padding:2px 8px; border-radius:999px; font-weight:700;}
 
-  .barwrap{overflow-x:auto; -webkit-overflow-scrolling:touch; display:flex; gap:7px; padding:2px 0 6px; scrollbar-width:none; position:relative;}
+  .barwrap{overflow-x:auto; -webkit-overflow-scrolling:touch; display:flex; gap:6px; padding:2px 0 6px; scrollbar-width:none; position:relative;}
   .barwrap::-webkit-scrollbar{display:none;}
   .chip{
-    flex:0 0 auto; min-width:52px; height:48px; padding:0 14px; background:#fff; color:var(--sub);
-    border:1.5px solid var(--line); border-radius:999px; font-size:16px; font-weight:800; cursor:pointer;
+    flex:0 0 auto; min-width:42px; height:40px; padding:0 11px; background:#fff; color:var(--sub);
+    border:1.5px solid var(--line); border-radius:999px; font-size:15px; font-weight:800; cursor:pointer;
     display:flex; align-items:center; justify-content:center; font-family:inherit;
     transition:background .15s, color .15s, border-color .15s, transform .08s;
   }
@@ -187,6 +195,21 @@
   #overlay.show{display:flex;}
   .spinner{width:38px; height:38px; border:3px solid var(--line); border-top-color:var(--ink); border-radius:50%; animation:spin .8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* add-exercise sheet */
+  #sheet{position:fixed; inset:0; z-index:120;}
+  #sheet .sheet-back{position:absolute; inset:0; background:rgba(0,0,0,.28); opacity:0; transition:opacity .2s;}
+  #sheet.show .sheet-back{opacity:1;}
+  #sheet .sheet-panel{position:absolute; left:50%; bottom:0; transform:translateX(-50%) translateY(100%); width:100%; max-width:430px; background:var(--bg); border-radius:22px 22px 0 0; max-height:82vh; display:flex; flex-direction:column; transition:transform .26s cubic-bezier(.2,.8,.2,1); padding-bottom:env(safe-area-inset-bottom); box-shadow:0 -8px 30px rgba(0,0,0,.12);}
+  #sheet.show .sheet-panel{transform:translateX(-50%) translateY(0);}
+  .sheet-head{display:flex; align-items:center; justify-content:space-between; padding:16px;}
+  .sheet-head .t{font-weight:800; font-size:16px;}
+  .sheet-list{overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 16px 6px;}
+  .sheet-foot{padding:12px 16px;}
+  .add-row{display:flex; align-items:center; gap:12px; background:#fff; border-radius:12px; padding:11px 14px; margin:8px 0; box-shadow:var(--shadow-sm); cursor:pointer;}
+  .add-row .ex-ic{width:30px; height:30px; color:var(--ink); flex:0 0 auto;}
+  .add-row .name{flex:1; font-size:15px;}
+  .add-row input{width:22px; height:22px; accent-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -349,9 +372,9 @@ function renderCalendar(m){
   for(let d=1;d<=daysInMonth;d++){
     const ds=y+'-'+pad(mo+1)+'-'+pad(d), dow=new Date(y,mo,d).getDay();
     const has=!!(state.records[ds]&&((state.records[ds].workouts||[]).length||state.records[ds].running));
-    const cls=['cal-cell']; if(ds===tStr)cls.push('today'); if(ds===state.selectedDate)cls.push('sel');
+    const cls=['cal-cell']; if(has)cls.push('has'); if(ds===tStr)cls.push('today'); if(ds===state.selectedDate)cls.push('sel');
     if(dow===0)cls.push('sun'); if(dow===6)cls.push('sat');
-    cells+='<div class="'+cls.join(' ')+'" data-date="'+ds+'"><span>'+d+'</span>'+(has?'<span class="cal-dot"></span>':'')+'</div>';
+    cells+='<div class="'+cls.join(' ')+'" data-date="'+ds+'"><span>'+d+'</span>'+(has?'<span class="cal-check">✓</span>':'')+'</div>';
   }
   const wdRow=WD.map((w,i)=>'<div class="cal-wd '+(i===0?'wd-sun':i===6?'wd-sat':'')+'">'+w+'</div>').join('');
   let banner='';
@@ -452,12 +475,12 @@ function startSession(date, exerciseNames, includeRunning, existingDay){
     if(exerciseNames.includes(ex)){
       const support=SUPPORT_EXERCISES.includes(ex);
       const ex0=existingDay&&existingDay.workouts?existingDay.workouts.find(w=>w.exercise===ex):null;
-      items.push({ type:'exercise', exercise:ex, category:cat, support, sets:buildSets(ex,support,date,ex0), collapsed:false });
+      items.push({ type:'exercise', exercise:ex, category:cat, support, sets:buildSets(ex,support,date,ex0), collapsed:true, touched:false });
     }
   }));
   if(includeRunning||(existingDay&&existingDay.running)){
     const r=(existingDay&&existingDay.running)?existingDay.running:{incline:'',duration:''};
-    items.push({ type:'running', incline:r.incline, duration:r.duration, collapsed:false });
+    items.push({ type:'running', incline:r.incline, duration:r.duration, collapsed:true, touched:false });
   }
   if(items.length===0){ toast('種目を選択してください'); return; }
   state.session={ date, items, editing:!!existingDay };
@@ -466,6 +489,44 @@ function startSession(date, exerciseNames, includeRunning, existingDay){
 function editSession(date){
   const day=state.records[date]||{}; const names=(day.workouts||[]).map(w=>w.exercise);
   startSession(date, names, !!day.running, day);
+}
+function categoryOf(ex){ for(const c of CATEGORIES){ if(EXERCISES[c].includes(ex)) return c; } return ''; }
+function reorderSession(){
+  const s=state.session; if(!s) return;
+  const ex=s.items.filter(i=>i.type==='exercise'), run=s.items.filter(i=>i.type==='running');
+  ex.sort((a,b)=>(CATEGORIES.indexOf(a.category)*100+EXERCISES[a.category].indexOf(a.exercise))-(CATEGORIES.indexOf(b.category)*100+EXERCISES[b.category].indexOf(b.exercise)));
+  s.items=[...ex,...run];
+}
+function openAddSheet(){
+  const s=state.session; if(!s) return;
+  const present=new Set(s.items.filter(i=>i.type==='exercise').map(i=>i.exercise));
+  const runPresent=s.items.some(i=>i.type==='running');
+  let list='';
+  CATEGORIES.forEach(cat=>{
+    const avail=EXERCISES[cat].filter(ex=>!present.has(ex));
+    if(!avail.length) return;
+    list+='<div class="cat-h">'+cat+'</div>';
+    avail.forEach(ex=>{ list+='<label class="add-row"><span class="ex-ic">'+svgIcon(exIconKey(ex))+'</span><span class="name">'+esc(ex)+'</span><input type="checkbox" value="'+esc(ex)+'"></label>'; });
+  });
+  if(!runPresent) list+='<div class="cat-h">有酸素</div><label class="add-row"><span class="ex-ic">'+svgIcon('running')+'</span><span class="name">ランニング</span><input type="checkbox" value="__run__"></label>';
+  if(!list) list='<div class="muted center" style="padding:28px 0">追加できる種目はありません</div>';
+  const sheet=document.createElement('div');
+  sheet.id='sheet';
+  sheet.innerHTML='<div class="sheet-back"></div><div class="sheet-panel"><div class="sheet-head"><span class="t">種目を追加</span><button class="iconbtn" data-x>✕</button></div><div class="sheet-list">'+list+'</div><div class="sheet-foot"><button class="btn" data-add>追加する</button></div></div>';
+  document.body.appendChild(sheet);
+  requestAnimationFrame(()=>sheet.classList.add('show'));
+  const close=()=>{ sheet.classList.remove('show'); setTimeout(()=>sheet.remove(),220); };
+  sheet.querySelector('[data-x]').onclick=close;
+  sheet.querySelector('.sheet-back').onclick=close;
+  sheet.querySelector('[data-add]').onclick=()=>{
+    const checked=[...sheet.querySelectorAll('input:checked')].map(c=>c.value); let added=0;
+    checked.forEach(v=>{
+      if(v==='__run__'){ if(!s.items.some(i=>i.type==='running')){ s.items.push({type:'running',incline:'',duration:'',collapsed:true,touched:false}); added++; } }
+      else { const support=SUPPORT_EXERCISES.includes(v); s.items.push({type:'exercise',exercise:v,category:categoryOf(v),support,sets:buildSets(v,support,s.date,null),collapsed:true,touched:false}); added++; }
+    });
+    close();
+    if(added){ reorderSession(); render(); toast(added+'種目を追加しました'); }
+  };
 }
 
 /* ============================================================
@@ -482,19 +543,26 @@ function chipBar(idx, si, kind, item){
   return '<div class="barwrap" data-idx="'+idx+'" data-set="'+si+'" data-kind="'+kind+'">'+chips+'</div>';
 }
 function kgText(kg, support){ if(support&&(!kg||kg===0)) return '自重'; return fmtKg(kg)+' kg'; }
+function valKg(kg, support){ return (support&&(!kg||kg===0)) ? '自重' : fmtKg(kg)+'kg'; }
+function valReps(r){ return r+'回'; }
+function runSummary(it){ return '傾斜 '+(it.incline||0)+' ／ '+(it.duration||0)+'分'; }
+function cardClasses(it){ return 'ex-card'+(it.collapsed?' collapsed':'')+(it.collapsed&&it.touched?' done':''); }
+function cardHead(it, idx, iconKey, name){
+  return '<div class="ex-card-head" data-toggle="'+idx+'"><span class="ex-card-ic">'+svgIcon(iconKey)+'</span><div class="ex-card-title"><div class="ex-card-name">'+esc(name)+'</div><div class="ex-card-cat">'+esc(it.type==='running'?'有酸素':it.category)+'</div></div><button class="ex-del" data-del="'+idx+'">✕</button><span class="ex-chk"></span></div>';
+}
 function exerciseCard(it, idx, date){
-  const kgLabel=it.support?'サポート(kg)':'kg'; let body='';
+  let body='';
   for(let si=0;si<3;si++){
     const set=it.sets[si];
     body+='<div class="set-block"><div class="set-label">セット'+(si+1)+'</div>'+
-      '<div class="field-label">'+kgLabel+'　<span class="valnow" id="v-'+idx+'-'+si+'-kg">'+kgText(set.kg,it.support)+'</span></div>'+chipBar(idx,si,'kg',it)+
-      '<div class="field-label">回数　<span class="valnow" id="v-'+idx+'-'+si+'-reps">'+set.reps+' 回</span></div>'+chipBar(idx,si,'reps',it)+
+      '<div class="valrow"><span class="valnow" id="v-'+idx+'-'+si+'-kg">'+valKg(set.kg,it.support)+'</span>'+(it.support?'<span class="valtag">サポート</span>':'')+'</div>'+chipBar(idx,si,'kg',it)+
+      '<div class="valrow"><span class="valnow" id="v-'+idx+'-'+si+'-reps">'+valReps(set.reps)+'</span></div>'+chipBar(idx,si,'reps',it)+
       '</div>';
   }
-  return '<div class="ex-card" data-idx="'+idx+'"><div class="ex-card-head" data-toggle="'+idx+'"><span class="ex-card-ic">'+svgIcon(exIconKey(it.exercise))+'</span><div class="ex-card-title"><div class="ex-card-name">'+esc(it.exercise)+'</div><div class="ex-card-cat">'+esc(it.category)+'</div></div><span class="ex-chk"></span></div><div class="ex-hist">'+histLine(it.exercise,it.support,date)+'</div><div class="ex-card-body">'+body+'</div><div class="ex-card-sum"></div></div>';
+  return '<div class="'+cardClasses(it)+'" data-idx="'+idx+'">'+cardHead(it,idx,exIconKey(it.exercise),it.exercise)+'<div class="ex-hist">'+histLine(it.exercise,it.support,date)+'</div><div class="ex-card-body">'+body+'</div><div class="ex-card-sum">'+setsText(it.sets,it.support)+'</div></div>';
 }
 function runningCard(it, idx){
-  return '<div class="ex-card" data-idx="'+idx+'"><div class="ex-card-head" data-toggle="'+idx+'"><span class="ex-card-ic">'+svgIcon('running')+'</span><div class="ex-card-title"><div class="ex-card-name">ランニング</div><div class="ex-card-cat">有酸素</div></div><span class="ex-chk"></span></div><div class="ex-card-body"><div class="inline-num"><div><div class="field-label">傾斜</div><input type="number" id="r-incline" inputmode="decimal" step="0.5" placeholder="例: 3.5" value="'+(it.incline??'')+'"></div><div><div class="field-label">時間（分）</div><input type="number" id="r-duration" inputmode="numeric" step="1" placeholder="例: 20" value="'+(it.duration??'')+'"></div></div></div><div class="ex-card-sum"></div></div>';
+  return '<div class="'+cardClasses(it)+'" data-idx="'+idx+'">'+cardHead(it,idx,'running','ランニング')+'<div class="ex-card-body"><div class="inline-num"><div><div class="field-label">傾斜</div><input type="number" id="r-incline" inputmode="decimal" step="0.5" placeholder="例: 3.5" value="'+(it.incline??'')+'"></div><div><div class="field-label">時間（分）</div><input type="number" id="r-duration" inputmode="numeric" step="1" placeholder="例: 20" value="'+(it.duration??'')+'"></div></div></div><div class="ex-card-sum">'+runSummary(it)+'</div></div>';
 }
 function renderSession(m){
   const s=state.session; if(!s){ go('calendar'); return; }
@@ -502,7 +570,9 @@ function renderSession(m){
   m.innerHTML=
     '<div class="head session-head"><button class="iconbtn" data-act="cancel">✕</button><div class="head-center"><div class="head-date">'+fmtJp(s.date)+'</div><div class="sub">'+s.items.length+' 種目</div></div><div style="width:40px"></div></div>'+
     cards+
+    '<button class="btn ghost" id="addEx">＋ 種目を追加</button>'+
     '<div class="save-bar"><button class="btn" data-act="save">保存する</button></div>';
+  function centerBars(root){ root.querySelectorAll('.barwrap').forEach(bar=>{ const sel=bar.querySelector('.chip.sel'); if(sel) bar.scrollLeft=sel.offsetLeft-bar.clientWidth/2+sel.clientWidth/2; }); }
   // chip interactions
   m.querySelectorAll('.barwrap').forEach(bar=>{
     bar.addEventListener('click',e=>{
@@ -511,22 +581,29 @@ function renderSession(m){
       if(kind==='kg') it.sets[si].kg=val; else it.sets[si].reps=val;
       bar.querySelectorAll('.chip').forEach(c=>c.classList.toggle('sel',c===chip));
       const lab=document.getElementById('v-'+idx+'-'+si+'-'+kind);
-      if(lab) lab.textContent = kind==='kg'?kgText(val,it.support):(val+' 回');
+      if(lab) lab.textContent = kind==='kg'?valKg(val,it.support):valReps(val);
     });
   });
-  // collapse toggles
+  // collapse / expand (+ done mark)
   m.querySelectorAll('[data-toggle]').forEach(head=>{
-    head.addEventListener('click',()=>{
+    head.addEventListener('click',e=>{
+      if(e.target.closest('.ex-del')) return;
       const idx=+head.dataset.toggle, it=s.items[idx], card=head.closest('.ex-card');
-      it.collapsed=!it.collapsed; card.classList.toggle('collapsed',it.collapsed);
-      if(it.collapsed) card.querySelector('.ex-card-sum').textContent = it.type==='running' ? ('傾斜 '+(it.incline||0)+' ／ '+(it.duration||0)+'分') : setsText(it.sets,it.support);
+      if(it.collapsed){ it.collapsed=false; it.touched=true; }
+      else { it.collapsed=true; card.querySelector('.ex-card-sum').textContent = it.type==='running'?runSummary(it):setsText(it.sets,it.support); }
+      card.classList.toggle('collapsed', it.collapsed);
+      card.classList.toggle('done', it.collapsed && it.touched);
+      if(!it.collapsed) centerBars(card);
     });
   });
+  // delete a card
+  m.querySelectorAll('.ex-del').forEach(b=>b.addEventListener('click',e=>{ e.stopPropagation(); s.items.splice(+b.dataset.del,1); render(); }));
+  // add exercises
+  const addb=$('#addEx',m); if(addb) addb.onclick=openAddSheet;
   // running inputs
   const ri=$('#r-incline',m), rd=$('#r-duration',m);
   if(ri){ const it=s.items.find(x=>x.type==='running'); ri.addEventListener('input',e=>it.incline=e.target.value); rd.addEventListener('input',e=>it.duration=e.target.value); }
-  // center selected chips
-  m.querySelectorAll('.barwrap').forEach(bar=>{ const sel=bar.querySelector('.chip.sel'); if(sel) bar.scrollLeft=sel.offsetLeft-bar.clientWidth/2+sel.clientWidth/2; });
+  centerBars(m);
   $('[data-act=cancel]',m).onclick=()=>{ if(confirm('記録を中断しますか？（保存していない内容は失われます）')){ state.session=null; go('calendar'); } };
   $('[data-act=save]',m).onclick=saveSession;
 }
