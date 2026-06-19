@@ -1,3 +1,26 @@
 {
-  "records": {}
+  "records": {
+    "2026-06-19": {
+      "workouts": [
+        {
+          "exercise": "ベンチプレス",
+          "category": "胸",
+          "sets": [
+            {
+              "kg": 70,
+              "reps": 5
+            },
+            {
+              "kg": 70,
+              "reps": 5
+            },
+            {
+              "kg": 70,
+              "reps": 5
+            }
+          ]
+        }
+      ]
+    }
+  }
 }
