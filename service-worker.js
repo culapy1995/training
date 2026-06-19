@@ -1,5 +1,5 @@
 // 筋トレ記録 PWA — オフラインキャッシュ（閲覧のみ）
-const CACHE = 'gym-cache-v1';
+const CACHE = 'gym-cache-v2';
 const ASSETS = [
   './',
   './index.html',
