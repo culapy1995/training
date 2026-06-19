@@ -226,7 +226,7 @@
    筋トレ記録 PWA
    ============================================================ */
 const EXERCISES = {
-  '胸':  ['ベンチプレス','インクラインベンチプレス','インクラインダンベルプレス','スミスマシンインクラインベンチプレス','チェストマシン','チェストフライマシン','ペックデッキフライ','ダンベルフライ','ケーブルクロスオーバー','ディップス'],
+  '胸':  ['ベンチプレス','インクラインベンチプレス','インクラインダンベルプレス','スミスマシンインクラインベンチプレス','デクラインベンチプレス','デクラインスミスマシンベンチプレス','チェストマシン','チェストフライマシン','ペックデッキフライ','ダンベルフライ','ケーブルクロスオーバー','ディップス'],
   '脚':  ['スクワット','スミスマシンスクワット','レッグエクステンション','ヒップアブダクションマシン'],
   '肩':  ['アーノルドプレス','ダンベルショルダープレス','ショルダープレスマシン'],
   '背中':['ラットプルダウン','ローローマシン','懸垂','チェストサポーテッドTバーロウ'],
@@ -260,7 +260,7 @@ const ICON = {
   nav_report: '<rect x="16" y="76" width="68" height="7" rx="3" fill="currentColor"/><rect x="24" y="50" width="13" height="26" rx="3" fill="currentColor"/><rect x="43" y="38" width="13" height="38" rx="3" fill="currentColor"/><rect x="62" y="26" width="13" height="50" rx="3" fill="currentColor"/>',
   nav_settings: '<rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(0 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(45 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(90 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(135 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(180 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(225 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(270 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(315 50 50)"/><circle cx="50" cy="50" r="23" fill="currentColor"/><circle cx="50" cy="50" r="8.5" fill="#fff"/>',
 };
-const EXICON = {"ベンチプレス":"bench_press","インクラインベンチプレス":"barbell","インクラインダンベルプレス":"dumbbell","スミスマシンインクラインベンチプレス":"smith","チェストマシン":"machine","チェストフライマシン":"machine","ペックデッキフライ":"machine","ダンベルフライ":"dumbbell","ケーブルクロスオーバー":"cable_crossover","ディップス":"dips","スクワット":"squat","スミスマシンスクワット":"squat","レッグエクステンション":"machine","ヒップアブダクションマシン":"machine","アーノルドプレス":"shoulder_press","ダンベルショルダープレス":"shoulder_press","ショルダープレスマシン":"machine","ラットプルダウン":"lat_pulldown","ローローマシン":"machine","懸垂":"pullup","チェストサポーテッドTバーロウ":"machine","ダンベルカール":"curl","シーテッドカール":"curl","ダンベルフレンチプレス":"dumbbell","トーソローテーション":"machine","トルソーローテーションマシン":"machine","アブドミナルクランチマシン":"machine","アブドミナルヒップレイズ":"machine"};
+const EXICON = {"ベンチプレス":"bench_press","インクラインベンチプレス":"barbell","インクラインダンベルプレス":"dumbbell","スミスマシンインクラインベンチプレス":"smith","デクラインベンチプレス":"barbell","デクラインスミスマシンベンチプレス":"smith","チェストマシン":"machine","チェストフライマシン":"machine","ペックデッキフライ":"machine","ダンベルフライ":"dumbbell","ケーブルクロスオーバー":"cable_crossover","ディップス":"dips","スクワット":"squat","スミスマシンスクワット":"squat","レッグエクステンション":"machine","ヒップアブダクションマシン":"machine","アーノルドプレス":"shoulder_press","ダンベルショルダープレス":"shoulder_press","ショルダープレスマシン":"machine","ラットプルダウン":"lat_pulldown","ローローマシン":"machine","懸垂":"pullup","チェストサポーテッドTバーロウ":"machine","ダンベルカール":"curl","シーテッドカール":"curl","ダンベルフレンチプレス":"dumbbell","トーソローテーション":"machine","トルソーローテーションマシン":"machine","アブドミナルクランチマシン":"machine","アブドミナルヒップレイズ":"machine"};
 function svgIcon(key, cls){ return '<svg class="svgico '+(cls||'')+'" viewBox="0 0 100 100" aria-hidden="true">'+(ICON[key]||ICON.machine)+'</svg>'; }
 function exIconKey(name){ return EXICON[name] || 'machine'; }
 
