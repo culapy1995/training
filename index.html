@@ -235,10 +235,12 @@ const EXERCISES = {
   '肩':  ['アーノルドプレス','ダンベルショルダープレス','ショルダープレスマシン'],
   '背中':['ラットプルダウン','ローローマシン','懸垂','チェストサポーテッドTバーロウ'],
   '腕':  ['ダンベルカール','シーテッドカール','ダンベルフレンチプレス'],
-  '腹':  ['トーソローテーション','トルソーローテーションマシン','アブドミナルクランチマシン','アブドミナルヒップレイズ'],
+  '腹':  ['トーソローテーション','トルソーローテーションマシン','アブドミナルクランチマシン','アブドミナルヒップレイズ','レッグレイズ'],
 };
 const CATEGORIES = ['胸','脚','肩','背中','腕','腹'];
-const SUPPORT_EXERCISES = ['懸垂','ディップス'];
+const SUPPORT_EXERCISES = ['懸垂','ディップス','レッグレイズ'];
+const ASSIST_EXERCISES = ['懸垂','ディップス'];
+function isAssist(name){ return ASSIST_EXERCISES.includes(name); }
 const WD = ['日','月','火','水','木','金','土'];
 const KG_OPTIONS = []; for (let v=2.5; v<=100.0001; v+=2.5) KG_OPTIONS.push(Math.round(v*10)/10);
 const KG_OPTIONS_DB = []; for (let v=2; v<=100.0001; v+=2) KG_OPTIONS_DB.push(v);
@@ -267,7 +269,7 @@ const ICON = {
   nav_report: '<rect x="16" y="76" width="68" height="7" rx="3" fill="currentColor"/><rect x="24" y="50" width="13" height="26" rx="3" fill="currentColor"/><rect x="43" y="38" width="13" height="38" rx="3" fill="currentColor"/><rect x="62" y="26" width="13" height="50" rx="3" fill="currentColor"/>',
   nav_settings: '<rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(0 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(45 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(90 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(135 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(180 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(225 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(270 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(315 50 50)"/><circle cx="50" cy="50" r="23" fill="currentColor"/><circle cx="50" cy="50" r="8.5" fill="#fff"/>',
 };
-const EXICON = {"ベンチプレス":"bench_press","インクラインベンチプレス":"barbell","インクラインダンベルプレス":"dumbbell","スミスマシンインクラインベンチプレス":"smith","デクラインベンチプレス":"barbell","デクラインスミスマシンベンチプレス":"smith","チェストマシン":"machine","チェストフライマシン":"machine","ペックデッキフライ":"machine","ダンベルフライ":"dumbbell","ケーブルクロスオーバー":"cable_crossover","ディップス":"dips","スクワット":"squat","スミスマシンスクワット":"squat","レッグエクステンション":"machine","ヒップアブダクションマシン":"machine","アダクター（内もも）":"machine","アーノルドプレス":"shoulder_press","ダンベルショルダープレス":"shoulder_press","ショルダープレスマシン":"machine","ラットプルダウン":"lat_pulldown","ローローマシン":"machine","懸垂":"pullup","チェストサポーテッドTバーロウ":"machine","ダンベルカール":"curl","シーテッドカール":"curl","ダンベルフレンチプレス":"dumbbell","トーソローテーション":"machine","トルソーローテーションマシン":"machine","アブドミナルクランチマシン":"machine","アブドミナルヒップレイズ":"machine"};
+const EXICON = {"ベンチプレス":"bench_press","インクラインベンチプレス":"barbell","インクラインダンベルプレス":"dumbbell","スミスマシンインクラインベンチプレス":"smith","デクラインベンチプレス":"barbell","デクラインスミスマシンベンチプレス":"smith","チェストマシン":"machine","チェストフライマシン":"machine","ペックデッキフライ":"machine","ダンベルフライ":"dumbbell","ケーブルクロスオーバー":"cable_crossover","ディップス":"dips","スクワット":"squat","スミスマシンスクワット":"squat","レッグエクステンション":"machine","ヒップアブダクションマシン":"machine","アダクター（内もも）":"machine","アーノルドプレス":"shoulder_press","ダンベルショルダープレス":"shoulder_press","ショルダープレスマシン":"machine","ラットプルダウン":"lat_pulldown","ローローマシン":"machine","懸垂":"pullup","チェストサポーテッドTバーロウ":"machine","ダンベルカール":"curl","シーテッドカール":"curl","ダンベルフレンチプレス":"dumbbell","トーソローテーション":"machine","トルソーローテーションマシン":"machine","アブドミナルクランチマシン":"machine","アブドミナルヒップレイズ":"machine","レッグレイズ":"machine"};
 function svgIcon(key, cls){ return '<svg class="svgico '+(cls||'')+'" viewBox="0 0 100 100" aria-hidden="true">'+(ICON[key]||ICON.machine)+'</svg>'; }
 function exIconKey(name){ return EXICON[name] || 'machine'; }
 
@@ -570,7 +572,7 @@ function exerciseCard(it, idx, date){
   for(let si=0;si<3;si++){
     const set=it.sets[si];
     body+='<div class="set-block"><div class="set-label">セット'+(si+1)+'</div>'+
-      '<div class="valrow"><span class="valnow" id="v-'+idx+'-'+si+'-kg">'+valKg(set.kg,it.support)+'</span>'+(it.support?'<span class="valtag">サポート</span>':'')+'</div>'+chipBar(idx,si,it)+
+      '<div class="valrow"><span class="valnow" id="v-'+idx+'-'+si+'-kg">'+valKg(set.kg,it.support)+'</span>'+(isAssist(it.exercise)?'<span class="valtag">サポート</span>':'')+'</div>'+chipBar(idx,si,it)+
       '<div class="valrow"><span class="valnow" id="v-'+idx+'-'+si+'-reps">'+valReps(set.reps)+'</span></div>'+repBar(idx,si,it)+
       '</div>';
   }
