@@ -230,7 +230,7 @@
    筋トレ記録 PWA
    ============================================================ */
 const EXERCISES = {
-  '胸':  ['ベンチプレス','インクラインベンチプレス','インクラインダンベルプレス','スミスマシンインクラインベンチプレス','デクラインベンチプレス','デクラインスミスマシンベンチプレス','チェストマシン','チェストフライマシン','ペックデッキフライ','ダンベルフライ','ケーブルクロスオーバー','ディップス'],
+  '胸':  ['ベンチプレス','スミスマシンベンチプレス','インクラインベンチプレス','インクラインダンベルプレス','スミスマシンインクラインベンチプレス','デクラインベンチプレス','デクラインスミスマシンベンチプレス','チェストマシン','チェストフライマシン','ペックデッキフライ','ダンベルフライ','ケーブルクロスオーバー','ディップス'],
   '脚':  ['スクワット','スミスマシンスクワット','レッグエクステンション','ヒップアブダクションマシン','アダクター（内もも）'],
   '肩':  ['アーノルドプレス','ダンベルショルダープレス','ショルダープレスマシン'],
   '背中':['ラットプルダウン','ローローマシン','懸垂','チェストサポーテッドTバーロウ'],
@@ -269,7 +269,7 @@ const ICON = {
   nav_report: '<rect x="16" y="76" width="68" height="7" rx="3" fill="currentColor"/><rect x="24" y="50" width="13" height="26" rx="3" fill="currentColor"/><rect x="43" y="38" width="13" height="38" rx="3" fill="currentColor"/><rect x="62" y="26" width="13" height="50" rx="3" fill="currentColor"/>',
   nav_settings: '<rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(0 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(45 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(90 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(135 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(180 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(225 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(270 50 50)"/><rect x="45" y="10" width="10" height="20" rx="2" fill="currentColor" transform="rotate(315 50 50)"/><circle cx="50" cy="50" r="23" fill="currentColor"/><circle cx="50" cy="50" r="8.5" fill="#fff"/>',
 };
-const EXICON = {"ベンチプレス":"bench_press","インクラインベンチプレス":"barbell","インクラインダンベルプレス":"dumbbell","スミスマシンインクラインベンチプレス":"smith","デクラインベンチプレス":"barbell","デクラインスミスマシンベンチプレス":"smith","チェストマシン":"machine","チェストフライマシン":"machine","ペックデッキフライ":"machine","ダンベルフライ":"dumbbell","ケーブルクロスオーバー":"cable_crossover","ディップス":"dips","スクワット":"squat","スミスマシンスクワット":"squat","レッグエクステンション":"machine","ヒップアブダクションマシン":"machine","アダクター（内もも）":"machine","アーノルドプレス":"shoulder_press","ダンベルショルダープレス":"shoulder_press","ショルダープレスマシン":"machine","ラットプルダウン":"lat_pulldown","ローローマシン":"machine","懸垂":"pullup","チェストサポーテッドTバーロウ":"machine","ダンベルカール":"curl","シーテッドカール":"curl","ダンベルフレンチプレス":"dumbbell","トーソローテーション":"machine","トルソーローテーションマシン":"machine","アブドミナルクランチマシン":"machine","アブドミナルヒップレイズ":"machine","レッグレイズ":"machine"};
+const EXICON = {"ベンチプレス":"bench_press","スミスマシンベンチプレス":"smith","インクラインベンチプレス":"barbell","インクラインダンベルプレス":"dumbbell","スミスマシンインクラインベンチプレス":"smith","デクラインベンチプレス":"barbell","デクラインスミスマシンベンチプレス":"smith","チェストマシン":"machine","チェストフライマシン":"machine","ペックデッキフライ":"machine","ダンベルフライ":"dumbbell","ケーブルクロスオーバー":"cable_crossover","ディップス":"dips","スクワット":"squat","スミスマシンスクワット":"squat","レッグエクステンション":"machine","ヒップアブダクションマシン":"machine","アダクター（内もも）":"machine","アーノルドプレス":"shoulder_press","ダンベルショルダープレス":"shoulder_press","ショルダープレスマシン":"machine","ラットプルダウン":"lat_pulldown","ローローマシン":"machine","懸垂":"pullup","チェストサポーテッドTバーロウ":"machine","ダンベルカール":"curl","シーテッドカール":"curl","ダンベルフレンチプレス":"dumbbell","トーソローテーション":"machine","トルソーローテーションマシン":"machine","アブドミナルクランチマシン":"machine","アブドミナルヒップレイズ":"machine","レッグレイズ":"machine"};
 function svgIcon(key, cls){ return '<svg class="svgico '+(cls||'')+'" viewBox="0 0 100 100" aria-hidden="true">'+(ICON[key]||ICON.machine)+'</svg>'; }
 function exIconKey(name){ return EXICON[name] || 'machine'; }
 
@@ -415,13 +415,22 @@ function renderDayPanel(){
       html+='<div class="summary-ex"><span class="si">'+svgIcon(exIconKey(w.exercise))+'</span><div style="flex:1"><div><span class="nm">'+esc(w.exercise)+'</span><span class="cat">'+esc(w.category||'')+'</span></div><div class="sets">'+sets+'</div></div></div>';
     });
     if(day.running) html+='<div class="summary-ex"><span class="si">'+svgIcon('running')+'</span><div style="flex:1"><div class="nm">ランニング</div><div class="sets">傾斜 '+esc(day.running.incline)+' ／ '+esc(day.running.duration)+'分</div></div></div>';
-    html+='</div><button class="btn secondary" data-act="edit">この日の記録を編集</button><div class="mt"><button class="btn" data-act="rec">この日に追加で記録する</button></div>';
+    html+='</div><button class="btn secondary" data-act="edit">この日の記録を編集</button><div class="mt"><button class="btn" data-act="rec">この日に追加で記録する</button></div><div class="mt"><button class="btn danger" data-act="delday">この日の記録を削除</button></div>';
   } else {
     html+='<button class="btn" data-act="rec">この日に記録する</button>';
   }
   panel.innerHTML=html;
   const rec=$('[data-act=rec]',panel); if(rec) rec.onclick=()=>{ state.selection.clear(); state.runningSelected=false; go('record'); };
   const ed=$('[data-act=edit]',panel); if(ed) ed.onclick=()=>editSession(ds);
+  const del=$('[data-act=delday]',panel); if(del) del.onclick=()=>deleteDay(ds);
+}
+async function deleteDay(date){
+  if(!confirm(fmtJp(date)+'の記録をすべて削除しますか？\nこの操作は元に戻せません。')) return;
+  delete state.records[date]; cacheRecords();
+  setLoading(true);
+  try{ await ghSave('delete '+date); toast('削除しました'); }
+  catch(e){ state.pendingSync=true; toast('ローカルのみ削除: '+e.message); }
+  finally{ setLoading(false); render(); }
 }
 
 /* ============================================================
