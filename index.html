@@ -313,6 +313,9 @@ function base64ToUtf8(b64){
 /* ---- cache ---- */
 function cacheRecords(){ try{ localStorage.setItem('gym_records', JSON.stringify(state.records)); }catch(e){} }
 function loadCache(){ try{ state.records=JSON.parse(localStorage.getItem('gym_records')||'{}')||{}; }catch(e){ state.records={}; } }
+function saveDraft(){ try{ if(state.session) localStorage.setItem('gym_draft', JSON.stringify(state.session)); }catch(e){} }
+function clearDraft(){ try{ localStorage.removeItem('gym_draft'); }catch(e){} }
+function loadDraft(){ try{ const d=localStorage.getItem('gym_draft'); if(!d) return null; const s=JSON.parse(d); return (s&&Array.isArray(s.items)&&s.items.length)?s:null; }catch(e){ return null; } }
 
 /* ---- GitHub API ---- */
 function ghUrl(){ return 'https://api.github.com/repos/'+state.repo+'/contents/data/records.json'; }
@@ -502,6 +505,7 @@ function startSession(date, exerciseNames, includeRunning, existingDay){
   }
   if(items.length===0){ toast('種目を選択してください'); return; }
   state.session={ date, items, editing:!!existingDay };
+  saveDraft();
   go('session');
 }
 function editSession(date){
@@ -543,7 +547,7 @@ function openAddSheet(){
       else { const support=SUPPORT_EXERCISES.includes(v); s.items.push({type:'exercise',exercise:v,category:categoryOf(v),support,sets:buildSets(v,support,s.date,null),collapsed:true,touched:false}); added++; }
     });
     close();
-    if(added){ reorderSession(); render(); toast(added+'種目を追加しました'); }
+    if(added){ reorderSession(); saveDraft(); render(); toast(added+'種目を追加しました'); }
   };
 }
 
@@ -608,6 +612,7 @@ function renderSession(m){
       bar.querySelectorAll('.chip').forEach(c=>c.classList.toggle('sel',c===chip));
       const lab=document.getElementById('v-'+idx+'-'+si+'-'+kind);
       if(lab) lab.textContent = kind==='kg'?valKg(val,it.support):valReps(val);
+      saveDraft();
     });
   });
   // collapse / expand (+ done mark)
@@ -620,6 +625,7 @@ function renderSession(m){
       card.classList.toggle('collapsed', it.collapsed);
       card.classList.toggle('done', it.collapsed && it.touched);
       if(!it.collapsed) centerBars(card);
+      saveDraft();
     });
   });
   // reps segmented bar
@@ -631,6 +637,7 @@ function renderSession(m){
       bar.querySelectorAll('.repcell').forEach(c=>c.classList.toggle('sel',c===cell));
       const lab=document.getElementById('v-'+idx+'-'+si+'-reps');
       if(lab) lab.textContent=valReps(val);
+      saveDraft();
     });
   });
   // delete a card (確認あり)
@@ -638,15 +645,15 @@ function renderSession(m){
     e.stopPropagation();
     const idx=+b.dataset.del, it=s.items[idx], name=it.type==='running'?'ランニング':it.exercise;
     if(!confirm('「'+name+'」を削除しますか？')) return;
-    s.items.splice(idx,1); render();
+    s.items.splice(idx,1); saveDraft(); render();
   }));
   // add exercises
   const addb=$('#addEx',m); if(addb) addb.onclick=openAddSheet;
   // running inputs
   const ri=$('#r-incline',m), rd=$('#r-duration',m);
-  if(ri){ const it=s.items.find(x=>x.type==='running'); ri.addEventListener('input',e=>it.incline=e.target.value); rd.addEventListener('input',e=>it.duration=e.target.value); }
+  if(ri){ const it=s.items.find(x=>x.type==='running'); ri.addEventListener('input',e=>{it.incline=e.target.value;saveDraft();}); rd.addEventListener('input',e=>{it.duration=e.target.value;saveDraft();}); }
   centerBars(m);
-  $('[data-act=cancel]',m).onclick=()=>{ if(confirm('記録を中断しますか？（保存していない内容は失われます）')){ state.session=null; go('calendar'); } };
+  $('[data-act=cancel]',m).onclick=()=>{ if(confirm('記録を中断しますか？（保存していない内容は失われます）')){ state.session=null; clearDraft(); go('calendar'); } };
   $('[data-act=save]',m).onclick=saveSession;
 }
 async function saveSession(){
@@ -669,6 +676,7 @@ async function saveSession(){
   catch(e){ state.pendingSync=true; toast('オフライン保存（後で再同期）: '+e.message); }
   finally{ setLoading(false); }
   state.session=null; state.selection.clear(); state.runningSelected=false;
+  clearDraft();
   state.calMonth=startOfMonth(parseDate(date)); go('calendar');
 }
 
@@ -765,7 +773,9 @@ function attachSwipe(el,onLeft,onRight){
 
 /* ---- init ---- */
 async function init(){
-  loadCache(); setupTabs(); render();
+  loadCache(); setupTabs();
+  const draft=loadDraft(); if(draft){ state.session=draft; state.view='session'; }
+  render();
   if(state.token&&state.repo){ setLoading(true); try{ await ghLoad(); }catch(e){ toast('オフライン表示: '+e.message); }finally{ setLoading(false); render(); } }
   if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('service-worker.js').catch(()=>{}); }); }
 }
